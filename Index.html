@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Media DB | Home</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/bootstrap.min.css" rel="stylesheet" />   
+    <link href="css/style.css" rel="stylesheet" />
+</head>
+<body>
+    <nav ID="siteNav" class="navbar navbar-default"></nav>
+    <div class="container-fluid">
+        <div>
+            <a class="btn btn-lg btn-primary btn-block" href="Search.html"><span class="glyphicon glyphicon-search"></span> Search</a>
+            <a class="btn btn-lg btn-default btn-block" href="AddCD.html"><span class="glyphicon glyphicon-plus"></span> New CD</a>
+        </div>
+        <hr />
+        <h2><span id="countCDs"></span> CDs</h2>
+        <h2><span id="countRecords"></span> Records</h2>
+    </div>
+</body>
+</html>
+
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="Scripts/Objects.js"></script>
+<script src="Scripts/Utility.js"></script>
+<script src="Scripts/bootstrap.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Load site navigation bar
+        $('#siteNav').load('TopMenu.html');
+
+        // Get the Media counts
+        // CDs
+        CDServiceAJAX('POST', 'GetCDsCount', '',
+        function (result) {
+            $('#countCDs').text(result);           
+        }, null);
+
+        // Records [stub]
+        $('#countRecords').text('0');
+    });
+</script>

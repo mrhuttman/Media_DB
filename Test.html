@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <title>Test</title>
+    </head>
+    <body>
+
+        <h2>Media_DB WCF Tester</h2>
+        <hr />
+        <input type="button" id="runTestsButton" value="Start" />
+        <br /><br />
+
+        <div id="AddCDResult"></div>
+        <hr />
+        <div id="GetCDResult"></div>
+        <hr />
+        <div id="UpdateCDResult"></div>
+
+    </body>
+
+</html>
+
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="Scripts/Objects.js"></script>
+<script src="Scripts/Utility.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        newCD_ID = -1;
+
+        test = JSON.stringify({ ID: 1 }); 
+        console.log("test: " + test);
+
+        // Flow control
+        Test_Progress = [];
+        Test_Progress[0] = null;
+        Test_Progress[1] = false;
+        Test_Progress[2] = false;
+        Test_Progress[3] = false;
+        Test_Progress[4] = false;
+        Test_Progress[5] = false;
+        Test_Progress[6] = false;
+        Test_Progress[7] = false;
+        Test_Progress[8] = false;
+        Test_Progress[9] = false;
+        Test_Progress[10] = false;
+        Test_Progress[11] = false;
+        Test_Progress[12] = false;
+
+        function Update_Test_Progress(step)
+        {
+            Test_Progress[step] = true;
+        }
+
+        // Test Runner
+        function RunTests()
+        {            
+            /*
+                1. Get CDs count - should be 0
+                2. Add a test CD
+                3. Pull the test CD back from the DB
+                4. Get CDs count - should be 1
+                5. Run SearchCDs_NoFilter - should return test CD
+                6. Run SearchCDs_Artist searching for 'TestArtist' - should return test CD
+                7. Run SearchCDs_Title searching for 'TestTitle' - should return test CD
+                8. Run SearchCDs_Binder searching for binder 0 - should return test CD
+                9. Run UpdateCD
+                10. Run GetCD - should show updated test CD
+                11. Delete test CD
+                12. Get CDs count - should be 0
+            */
+
+            // 1 - Get CDs count - should be 0
+            Test_GetCDsCount(function () {
+                Update_Test_Progress(1);
+                Step2();
+            });
+            // 2 - Add a test CD
+            function Step2()
+            {
+                setTimeout(function ()
+                {
+                    if (true == Test_Progress[1])
+                    {
+                        Test_AddCD(Update_Test_Progress(2));
+                        Step3();
+                    }
+                    else
+                    {
+                        Step2();
+                    }
+                }, 500);
+            }            
+            // 3 - Pull the test CD back from the DB
+            function Step3() {
+                setTimeout(function () {
+                    if (true == Test_Progress[2]) {
+                        Test_GetCD(Update_Test_Progress(3));
+                        Step4();
+                    }
+                    else {
+                        Step3();
+                    }
+                }, 500);
+            }            
+            // 4 - Get CDs count - should be 1
+            function Step4() {
+                setTimeout(function () {
+                    if (true == Test_Progress[3]) {
+                        Test_GetCDsCount(Update_Test_Progress(4));
+                        Step5();
+                    }
+                    else {
+                        Step4();
+                    }
+                }, 500);
+            }            
+            // 5 - Run SearchCDs_NoFilter - should return test CD
+            function Step5() {
+                setTimeout(function () {
+                    if (true == Test_Progress[4]) {
+                        Test_SearchCDs_NoFilter(Update_Test_Progress(5));
+                        Step6();
+                    }
+                    else {
+                        Step5();
+                    }
+                }, 500);
+            }            
+            // 6 - Run SearchCDs_Artist searching for 'TestArtist' - should return test CD
+            function Step6() {
+                setTimeout(function () {
+                    if (true == Test_Progress[5]) {
+                        Test_SearchCDs_Artist(Update_Test_Progress(6));
+                        Step7();
+                    }
+                    else {
+                        Step6();
+                    }
+                }, 500);
+            }            
+            // 7 - Run SearchCDs_Title searching for 'TestTitle' - should return test CD
+            function Step7() {
+                setTimeout(function () {
+                    if (true == Test_Progress[6]) {
+                        Test_SearchCDs_Title(Update_Test_Progress(7));
+                        Step8();
+                    }
+                    else {
+                        Step7();
+                    }
+                }, 500);
+            }            
+            // 8 - Run SearchCDs_Binder searching for binder 0 - should return test CD
+            function Step8() {
+                setTimeout(function () {
+                    if (true == Test_Progress[7]) {
+                        Test_SearchCDs_Binder(Update_Test_Progress(8));
+                        Step9();
+                    }
+                    else {
+                        Step8();
+                    }
+                }, 500);
+            }            
+            // 9 - Run UpdateCD
+            function Step9() {
+                setTimeout(function () {
+                    if (true == Test_Progress[8]) {
+                        Test_UpdateCD(Update_Test_Progress(9));
+                        Step10();
+                    }
+                    else {
+                        Step9();
+                    }
+                }, 500);
+            }            
+            // 10 - Run GetCD - should show updated test CD
+            function Step10() {
+                setTimeout(function () {
+                    if (true == Test_Progress[9]) {
+                        Test_GetCD(Update_Test_Progress(10));
+                        Step11();
+                    }
+                    else {
+                        Step10();
+                    }
+                }, 500);
+            }            
+            // 11 - Delete test CD
+            function Step11() {
+                setTimeout(function () {
+                    if (true == Test_Progress[10]) {
+                        Test_DeleteCD(Update_Test_Progress(11));
+                        Step12();
+                    }
+                    else {
+                        Step11();
+                    }
+                }, 500);
+            }            
+            // 12 - Get CDs count - should be 0
+            function Step12() {
+                setTimeout(function () {
+                    if (true == Test_Progress[11]) {
+                        Test_GetCDsCount(Update_Test_Progress(12));
+                        // All tests complete
+                        console.log("All tests complete!");
+                    }
+                    else {
+                        Step12();
+                    }
+                }, 500);
+            }                       
+        }
+
+        document.getElementById('runTestsButton').onclick = RunTests;
+
+        // AddCD
+        function Test_AddCD(callback)
+        {
+            console.log("Calling AddCD");
+            testCD = new Music_CD(0, "TestArtist", "TestTitle", "", "", false, 0, 1, "TestMisc");
+
+            CDServiceAJAX('POST', 'AddCD', JSON.stringify(testCD),
+                function (result) {
+                    console.log("AddCD result: " + result);
+                    $("#AddCDResult").html("<i>AddCD</i><br><br>" + result);
+                    newCD_ID = result;
+                    // http://stackoverflow.com/questions/19120317/what-does-callback-callback-mean-in-javascript
+                    callback && callback();
+                },
+                function (error) {
+                    console.log("AddCD failed!");
+                    $("#AddCDResult").html("<i>AddCD</i><br><br>" + error);
+                });
+        }
+        
+        // GetCD
+        function Test_GetCD(callback)
+        {
+            console.log("Calling GetCD");
+            console.log("newCD_ID: " + newCD_ID);
+
+            CDServiceAJAX('POST',
+                'GetCD',                
+                -1 != newCD_ID ? newCD_ID : 1,              
+                function (result) {
+                    console.log("GetCD result: " + JSON.stringify(result));
+                    $("#GetCDResult").html(
+                        "<b>"
+                        + "<i>GetCD</i><br>"
+                        + "<br>Artist: " + result.Artist
+                        + "<br> Title: " + result.Title
+                        + "<br> Binder: " + result.binder
+                        + "<br> imageurl_sm: " + result.imageUrl_sm
+                        + "<br> imageurl_lg: " + result.imageUrl_lg
+                        + "<br> isMixed: " + result.isMixed
+                        + "<br> itemNo_pk: " + result.itemNo_pk
+                        + "<br> numDiscs: " + result.numDiscs
+                        + "<br> misc: " + result.misc
+                        + "</b>");
+                    callback && callback();
+                }, null);
+        }
+        
+        // GetCDsCount
+        function Test_GetCDsCount(callback) {
+            console.log("Calling GetCDsCount");
+            CDServiceAJAX('POST', 'GetCDsCount', '',
+                function (result) {
+                    console.log("GetCDsCount result: " + result);
+                    callback && callback();
+                }, null);
+        }
+
+        // DeleteCD
+        function Test_DeleteCD(callback) {
+            console.log("Calling DeleteCD");
+            console.log("newCD_ID: " + newCD_ID);
+            CDServiceAJAX('POST', 'DeleteCD',
+                -1 != newCD_ID ? newCD_ID : null,
+                function () {
+                    console.log("CD #" + newCD_ID + " deleted.");
+                    callback && callback();
+                }, null);
+        }
+
+        // SearchCDs_NoFilter
+        function Test_SearchCDs_NoFilter(callback) {
+            console.log("Calling SearchCDs_NoFilter");
+            CDServiceAJAX('POST',
+                'SearchCDs_NoFilter', JSON.stringify(1),
+                function (result) {
+                    console.log("SearchCDs_NoFilter result: " + JSON.stringify(result));
+                    callback && callback();
+                }, null);
+        }
+
+        // SearchCDs_Artist
+        function Test_SearchCDs_Artist(callback) {
+            console.log("Calling SearchCDs_Artist");
+            input = new SearchCDs_Artist_Input('TestArtist', 1);
+            console.log("input: " + JSON.stringify(input));
+
+            CDServiceAJAX('POST',
+                'SearchCDs_Artist', JSON.stringify(input),
+                function (result) {
+                    console.log("SearchCDs_Artist result: " + JSON.stringify(result));
+                    callback && callback();
+                }, null);
+        }
+
+        // SearchCDs_Title
+        function Test_SearchCDs_Title(callback) {
+            console.log("Calling SearchCDs_Title");
+            input = new SearchCDs_Title_Input('TestTitle', 1);
+            console.log("input: " + JSON.stringify(input));
+
+            CDServiceAJAX('POST',
+                'SearchCDs_Title', JSON.stringify(input),
+                function (result) {
+                    console.log("SearchCDs_Title result: " + JSON.stringify(result));
+                    callback && callback();
+                }, null);
+        }
+
+        // SearchCDs_Binder
+        function Test_SearchCDs_Binder(callback) {
+            console.log("Calling SearchCDs_Binder");
+            input = new SearchCDs_Binder_Input(0, 1);
+            console.log("input: " + JSON.stringify(input));
+
+            CDServiceAJAX('POST',
+                'SearchCDs_Binder', JSON.stringify(input),
+                function (result) {
+                    console.log("SearchCDs_Binder result: " + JSON.stringify(result));
+                    callback && callback();
+                }, null);
+        }
+
+        // UpdateCD
+        function Test_UpdateCD(callback) {
+            console.log("Calling UpdateCD");
+            console.log("newCD_ID @ UpdateCD: " + newCD_ID);            
+            testCD = new Music_CD(newCD_ID, "UpdatedArtist", "UpdatedTitle", "", "", false, 1, 2, "UpdatedMisc");
+            console.log("testCD: " + JSON.stringify(testCD));
+
+            CDServiceAJAX('POST', 'UpdateCD', JSON.stringify(testCD),
+                function (result) {
+                    console.log("UpdateCD result: " + result);
+                    $("#UpdateCDResult").html("<i>UpdateCD</i><br><br>" + result);
+                    callback && callback();
+                },
+                function (error) {
+                    console.log("UpdateCD failed!");
+                    $("#UpdateCDResult").html("<i>UpdateCD</i><br><br>" + error);
+                });
+        }
+        
+    });
+</script>

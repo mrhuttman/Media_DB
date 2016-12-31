@@ -1,0 +1,356 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Media DB | Search</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet" />
+
+    <style>
+        a.filter-button:after 
+        {
+            font-family:'Glyphicons Halflings';
+            content:"\e113"; 
+            float: right;
+            color: grey;
+        }
+        a.filter-button.collapsed:after 
+        {
+            content:"\e080";
+        }
+
+        #loadingPanel
+        {
+            width:100%;
+            height:100%;
+            position:fixed;
+            z-index:9999;
+            background:url("../Images/3.gif") no-repeat center center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Search filters -->
+        <div class="form-group">            
+            <div id="searchFilters" class="collapse">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="artistInput">Artist</label>
+                                <input type="text" class="form-control" id="artistInput" placeholder="Artist" />
+                            </div>
+                            <div class="form-group">
+                                <label for="titleInput">Title</label>
+                                <input type="text" class="form-control" id="titleInput" placeholder="Title" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mixedSelect">Mixed</label>
+                                <select id="mixedSelect" class="form-control">
+                                    <option value="Any" selected>Any</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="binderSelect">Binder #</label>
+                                <select id="binderSelect" class="form-control">
+                                    <option value="Any" selected>Any</option>
+                                    <!--<option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>-->                                    
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="numberDiscsInput"># of Discs</label>
+                                <input type="number" class="form-control" id="numberDiscsInput" />
+                            </div>
+                            <div class="form-group">
+                                <label for="miscInput">Misc</label>
+                                <input type="text" class="form-control" id="miscInput" placeholder="Misc." />
+                            </div>
+                            <button ID="searchButton" type="button" class="btn btn-primary btn-lg btn-block">
+                                <span class="glyphicon glyphicon-search"></span> Search
+                            </button>
+                        </form>
+                    </div>                             
+                </div>
+            </div>
+            <a for="searchFilters" data-toggle="collapse" href="#searchFilters" class="btn btn-default btn-lg btn-block filter-button collapsed">Filters</a>
+        </div>    
+                                      
+        <!-- Alerts -->
+        <div ID="errorAlert" class="alert alert-warning alert-dismissible hidden" role="alert">
+            <button type="button" class="close" data-hide="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Error:</strong> <span id="errorMessage"></span>
+        </div>
+
+        <!-- Top page controls -->
+        <div class="row">
+            <div class="col-xs-3 col-lg-3">
+                <a href="#" aria-label="Previous" class="previousButton btn btn-sm btn-default btn-block form-control">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </div>
+            <div class="col-xs-6 col-lg-6">                
+                <select id="topPageSelect" class="form-control">
+                </select>
+            </div>
+            <div class="col-xs-3 col-lg-3">
+                <a href="#" aria-label="Next" class="nextButton btn btn-sm btn-default btn-block form-control">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Search results -->
+        <div id="searchResults" class="hidden">
+            <h4 id="currentPageHeading"></h4>
+            <h5 id="totalNumRowsHeading"></h5>
+            <div id="resultsList"></div>
+        </div>
+
+        <!-- No results panel -->
+        <div id="noResults" class="hidden"></div>
+
+        <!-- Loading panel -->
+        <div id="loadingPanel" class="hidden">
+        </div>
+
+        <!-- Bottom page controls -->
+        <div class="row">
+            <div class="col-xs-3 col-lg-3">
+                <a href="#" aria-label="Previous" class="previousButton btn btn-sm btn-default btn-block form-control">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </div>
+            <div class="col-xs-6 col-lg-6">
+                <select id="bottomPageSelect" class="form-control">                    
+                </select>
+            </div>
+            <div class="col-xs-3 col-lg-3">
+                <a href="#" aria-label="Next" class="nextButton btn btn-sm btn-default btn-block form-control">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="Scripts/Objects.js"></script>
+<script src="Scripts/Utility.js"></script>
+<script src="Scripts/bootstrap.min.js"></script>
+
+<script>        
+
+    pageSize = 20;
+
+    function BuildBinderSelect()
+    {                
+        CDServiceAJAX('POST', 'GetBindersCount', null, function (result) {
+            console.dir(result);                
+            for (i = 1; i <= result; i++)
+            {
+                // Add options to binderSelect
+                $('#binderSelect').append("<option value='" + i + "'>" + i + "</option>");
+            }           
+        }, null);        
+    }
+
+    function BuildMediaDiv(ID, imageUrl_sm, artist, title, binder, mixed, numDiscs)
+    {
+        editLink = "<a href='EditCD.html?ID=" + ID + "'>";
+        media = "<div class='media'>";
+
+            // Left thumbnail image & link
+            media += "<div class='media-left'>";
+                media += editLink;
+                // TODO: Determine if using imageUrl_sm or generic image 
+
+            media += "</a></div>";
+
+            // Right text & link
+            media += "<div class='media-body'>";
+                media += "<h4 class='media-heading'>";
+                    media += editLink;
+                    media += artist + " &emdash; " + title;
+                media += "</a></h4>";
+                media += "Binder #" + binder + " - Discs: " + numDiscs + "<br>";
+                media += (mixed) ? "<b>Mixed</b>" : "<b>Unmixed</b>";
+            media += "</div>";
+
+        media += "</div>";
+        console.log(media);
+        return media;
+    }
+
+    function BuildPageSelect(totalRows, pageSize, currentPage)
+    {
+        numPages = Math.ceil(totalRows / pageSize);
+        for (i = 1; i <= numPages; i++)
+        {
+            // Add option to top page select
+            // Add option to bottom page select
+
+            // Set selected options to current page
+        }
+    }
+
+    function ChangeResultsPage(page)
+    {
+        // Get search params from URL - I'm doing this instead of pulling from page filters to preserve previous search terms
+        searchInput = GetSearchURLParams();
+        searchInput.Page = page;
+        LoadSearchURL(searchInput);
+    }
+
+    function GetSearchURLParams()
+    {
+        // Build search input object using URL params
+        input = new Empty_SearchCDs_Advanced_Input();
+        input.Page = getURLParameter('page');
+        input.SearchCD.Artist = getURLParameter('artist');
+        input.SearchCD.Title = getURLParameter('title');
+        input.SearchCD.binder = getURLParameter('binder');
+
+        console.log("isMixed URL param: " + getURLParameter('isMixed'));
+        input.SearchCD.isMixed = 'true' == getURLParameter('isMixed') ? true : false;
+        input.Filter_isMixed = null === getURLParameter('isMixed') ? false : true;
+
+        input.SearchCD.numDiscs = getURLParameter('numDiscs');
+        input.SearchCD.misc = getURLParameter('misc');
+        return input;
+    }
+
+    function LoadSearchURL(searchInput)
+    {
+        searchURL = "Search.html?Search=true";
+        if (0 < searchInput.SearchCD.Artist.length) { searchURL += "&artist=" + searchInput.SearchCD.Artist; }
+        if (0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
+        if (-1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }
+        if (true === searchInput.filter_IsMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
+        if (0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
+        if (0 < searchInput.SearchCD.misc.length) { searchURL += "&misc=" + searchInput.SearchCD.misc; }
+        0 < searchInput.Page ? searchURL += "&page=" + searchInput.Page : searchURL += "&page=1";
+        //window.location.href = searchURL;        
+        console.log(searchURL);
+    }
+
+    function LoadSearchResults(searchInput)
+    {
+        // Load search results based on URL search params
+        CDServiceAJAX('POST',
+            'SearchCDs_Advanced', JSON.stringify(searchInput),
+            function (result) {
+                console.log("Search result: " + JSON.stringify(result));
+
+                // TODO: Loop through CDs, add to search results div
+                // result.CDs, use loop from 1 to result.NumRows
+                console.dir(result.CDs);
+                // Each item will be a media object: http://getbootstrap.com/components/#media
+                // I stopped here 12/31
+
+                // Set page select controls with current page # & total num pages
+                // result.totalNumRows / pageSize
+                // Note: pageSize is currently a constant 20, same as defined in WCF service
+                // TODO: Add page size select, add page size var to service
+                BuildPageSelect(result.totalNumRows, pageSize, searchInput.Page);
+
+                // Show search results div
+                $('#searchResults').removeClass('hidden');
+
+            }, null);
+    }
+
+    function SetSearchFilters(input, callback)
+    {
+        // Fill search filters with values from URL search params 
+        if (null !== input.SearchCD.Artist) { $('#artistInput').text(input.SearchCD.Artist); }
+        if (null !== input.SearchCD.Title) { $('#titleInput').text(input.SearchCD.Title); }
+        if (null !== input.SearchCD.binder) { $("#binderSelect option[value='" + input.SearchCD.binder + "']").prop('selected', true); }
+        if (input.Filter_isMixed) {
+            true == input.SearchCD.isMixed
+            ? $("#mixedSelect option[value='Yes']").prop('selected', true)
+            : $("#mixedSelect option[value='No']").prop('selected', true);
+        }
+        else {
+            $("#mixedSelect option[value='Any']").prop('selected', true);
+        }
+        if (null !== input.SearchCD.numDiscs) { $('#numberDiscsInput').text(input.SearchCD.numDiscs); }
+        if (null !== input.SearchCD.misc) { $('#miscInput').text(input.SearchCD.misc); }
+        callback && callback(input);
+    }
+
+    $(document).ready(function () {
+        // Load site navigation bar
+        $('#siteNav').load('TopMenu.html');
+
+        // Build the options for the binderSelect select control
+        BuildBinderSelect();
+       
+        // Are search parameters in the URL? 
+        isSearch = getURLParameter('Search');
+        console.log("isSearch: " + isSearch);
+        if ('true' == isSearch)
+        {
+            $('#loadingPanel').removeClass('hidden');
+
+            input = GetSearchURLParams();
+            SetSearchFilters(input, LoadSearchResults(input));
+
+
+            
+            // Collapse search filters
+            if (false == $('#searchFilters').hasClass('collapsed')) { $('#searchFilters').addClass('collapsed'); }
+            
+            $('#loadingPanel').addClass('hidden');
+        }
+        else
+        {
+            // Expand search filters
+
+            // Hide search results div
+
+            // Disable page select controls, previous/next page buttons
+        }
+
+        $('#searchButton').click(function () {         
+            // Setup new search, grab search options from page filters
+            input = new Empty_SearchCDs_Advanced_Input();
+            input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
+            input.Page = 1;
+                        
+            input.SearchCD.Artist = $('#artistInput').text();
+            input.SearchCD.binder = "Any" == $('#binderSelect option:selected').text() ? -1 : $('#binderSelect option:selected').text();
+            input.SearchCD.isMixed = "Yes" == $('#mixedSelect option:selected').text() ? true : false;
+            input.SearchCD.misc = $('#miscInput').text();
+            input.SearchCD.numDiscs = $('#numberDiscsInput').text();
+            input.SearchCD.Title = $('#titleInput').text();
+                        
+            console.log("searchButton click event, input var: ");
+            console.dir(input);
+            LoadSearchURL(input);         
+        });
+
+        $('.previousButton').click(function () {
+
+        });
+
+        $('.nextButton').click(function () {
+
+        });
+
+        $('#topPageSelect').change(function () {
+
+        });
+
+        $('#bottomPageSelect').change(function () {
+
+        });
+    });
+</script>
