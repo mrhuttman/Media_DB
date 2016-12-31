@@ -23,6 +23,15 @@ function CDServiceAJAX(type, method, data, successCallback, errorCallback)
     });
 }
 
+// Check if an image file exists on the server
+function checkImage(imageSrc, good, bad)
+{
+    var img = new Image();
+    img.onload = good;
+    img.onerror = bad;
+    img.src = imageSrc;
+}
+
 // Hide Bootstrap alerts without removing them from the DOM
 // http://jsfiddle.net/cQNFL/21/
 $("[data-hide]").on("click", function ()

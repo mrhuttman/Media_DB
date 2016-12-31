@@ -113,9 +113,6 @@
             <div id="resultsList"></div>
         </div>
 
-        <!-- No results panel -->
-        <div id="noResults" class="hidden"></div>
-
         <!-- Loading panel -->
         <div id="loadingPanel" class="hidden">
         </div>
@@ -137,6 +134,10 @@
                 </a>
             </div>
         </div>
+
+        <!-- Hidden fields -->
+        <input id="hCurrentPage" type="hidden" />
+        <input id="hTotalPages" type="hidden" />
     </div>
 </body>
 </html>
@@ -153,6 +154,7 @@
     function BuildBinderSelect()
     {                
         CDServiceAJAX('POST', 'GetBindersCount', null, function (result) {
+            console.log("GetBindersCount result:");
             console.dir(result);                
             for (i = 1; i <= result; i++)
             {
@@ -164,14 +166,23 @@
 
     function BuildMediaDiv(ID, imageUrl_sm, artist, title, binder, mixed, numDiscs)
     {
+        // Bootstrap media object: http://getbootstrap.com/components/#media
         editLink = "<a href='EditCD.html?ID=" + ID + "'>";
+
         media = "<div class='media'>";
 
             // Left thumbnail image & link
             media += "<div class='media-left'>";
-                media += editLink;
-                // TODO: Determine if using imageUrl_sm or generic image 
-
+                media += editLink;                
+                checkImage("/Images/Covers/" + imageUrl_sm,
+                    function () {
+                        // Image exists
+                        media += "<img class='media-object' src='/Images/Covers/" + imageUrl_sm + "'>";
+                    },
+                    function () {
+                        // Image does not exist, use generic icon instead
+                        media += "<img class='media-object' src='/Images/compact-disc-icon.png'>";
+                    });
             media += "</a></div>";
 
             // Right text & link
@@ -185,20 +196,35 @@
             media += "</div>";
 
         media += "</div>";
+
         console.log(media);
         return media;
     }
 
-    function BuildPageSelect(totalRows, pageSize, currentPage)
+    // This function handles setting all of the pager controls/selects and related controls
+    function BuildPageElements(totalRows, pageSize, currentPage)
     {
         numPages = Math.ceil(totalRows / pageSize);
         for (i = 1; i <= numPages; i++)
         {
-            // Add option to top page select
-            // Add option to bottom page select
-
-            // Set selected options to current page
+            // Add option to top & bottom page selects
+            $('#topPageSelect').append("<option value='" + i + "'>" + i + "</option>");            
+            $('#bottomPageSelect').append("<option value='" + i + "'>" + i + "</option>");            
         }
+        // Set selected options to current page
+        $("#topPageSelect option[value='" + currentPage + "']").prop('selected', true);
+        $("#bottomPageSelect option[value='" + currentPage + "']").prop('selected', true);
+
+        // Set heading in searchResults div
+        if (0 < numPages) { $('#currentPageHeading').text('Page ' + currentPage + " of " + numPages + "."); }
+                
+        // Set hidden values
+        $('#hCurrentPage').val(currentPage);
+        $('#hTotalPages').val(numPages);
+
+        // Check for first/last page & disable previous/next buttons accordingly
+        if (1 == currentPage) { $('.previousButton').prop('disabled', true); }
+        if (numPages == currentPage) { $('.nextButton').prop('disabled', true); }            
     }
 
     function ChangeResultsPage(page)
@@ -247,23 +273,33 @@
         CDServiceAJAX('POST',
             'SearchCDs_Advanced', JSON.stringify(searchInput),
             function (result) {
-                console.log("Search result: " + JSON.stringify(result));
+                console.log("Search result: ");
+                console.dir(result);
 
-                // TODO: Loop through CDs, add to search results div
-                // result.CDs, use loop from 1 to result.NumRows
-                console.dir(result.CDs);
-                // Each item will be a media object: http://getbootstrap.com/components/#media
-                // I stopped here 12/31
-
-                // Set page select controls with current page # & total num pages
-                // result.totalNumRows / pageSize
-                // Note: pageSize is currently a constant 20, same as defined in WCF service
+                // Loop through CDs, add to search results div                
+                console.dir(result.CDs);                
+                for (i = 1; i <= result.NumRows; i++)
+                {
+                    $('#resultsList').append(
+                        BuildMediaDiv(
+                            result.CDs[i].itemNo_pk,
+                            result.CDs[i].imageUrl_sm,
+                            result.CDs[i].Artist,
+                            result.CDs[i].Title,
+                            result.CDs[i].binder,
+                            result.CDs[i].numDiscs
+                            )
+                        );
+                }
+                               
+                // Note: pageSize is currently 20, same as defined in WCF service
                 // TODO: Add page size select, add page size var to service
-                BuildPageSelect(result.totalNumRows, pageSize, searchInput.Page);
 
-                // Show search results div
+                // Set page select controls & heading with current page # & total num pages 
+                BuildPageElements(result.totalNumRows, pageSize, searchInput.Page);
+
+                $('#totalNumRowsHeading').text(result.totalNumRows + " results found.");                
                 $('#searchResults').removeClass('hidden');
-
             }, null);
     }
 
@@ -273,12 +309,14 @@
         if (null !== input.SearchCD.Artist) { $('#artistInput').text(input.SearchCD.Artist); }
         if (null !== input.SearchCD.Title) { $('#titleInput').text(input.SearchCD.Title); }
         if (null !== input.SearchCD.binder) { $("#binderSelect option[value='" + input.SearchCD.binder + "']").prop('selected', true); }
-        if (input.Filter_isMixed) {
+        if (input.Filter_isMixed)
+        {
             true == input.SearchCD.isMixed
             ? $("#mixedSelect option[value='Yes']").prop('selected', true)
             : $("#mixedSelect option[value='No']").prop('selected', true);
         }
-        else {
+        else
+        {
             $("#mixedSelect option[value='Any']").prop('selected', true);
         }
         if (null !== input.SearchCD.numDiscs) { $('#numberDiscsInput').text(input.SearchCD.numDiscs); }
@@ -301,9 +339,9 @@
             $('#loadingPanel').removeClass('hidden');
 
             input = GetSearchURLParams();
+
+            // Set filter control values, then load the search once finished
             SetSearchFilters(input, LoadSearchResults(input));
-
-
             
             // Collapse search filters
             if (false == $('#searchFilters').hasClass('collapsed')) { $('#searchFilters').addClass('collapsed'); }
@@ -313,44 +351,59 @@
         else
         {
             // Expand search filters
+            if ($('#searchFilters').hasClass('collapsed')) { $('#searchFilters').removeClass('collapsed'); }
 
             // Hide search results div
+            if (false == $('#searchResults').hasClass('hidden')) { $('#searchResults').addClass('hidden'); }
 
             // Disable page select controls, previous/next page buttons
+            $('.previousButton').prop('disabled', true);
+            $('.nextButton').prop('disabled', true);
+            $('#topPageSelect').prop('disabled', true);
+            $('#bottomPageSelect').prop('disabled', true);
         }
 
         $('#searchButton').click(function () {         
             // Setup new search, grab search options from page filters
             input = new Empty_SearchCDs_Advanced_Input();
             input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
-            input.Page = 1;
-                        
+            input.Page = 1;                        
             input.SearchCD.Artist = $('#artistInput').text();
             input.SearchCD.binder = "Any" == $('#binderSelect option:selected').text() ? -1 : $('#binderSelect option:selected').text();
             input.SearchCD.isMixed = "Yes" == $('#mixedSelect option:selected').text() ? true : false;
             input.SearchCD.misc = $('#miscInput').text();
             input.SearchCD.numDiscs = $('#numberDiscsInput').text();
-            input.SearchCD.Title = $('#titleInput').text();
-                        
+            input.SearchCD.Title = $('#titleInput').text();                        
             console.log("searchButton click event, input var: ");
             console.dir(input);
             LoadSearchURL(input);         
         });
 
-        $('.previousButton').click(function () {
-
+        $('.previousButton').click(function ()
+        {
+            currentPage = $('#hCurrentPage').val();
+            if (0 < currentPage - 1)
+            {
+                ChangeResultsPage(currentPage - 1);
+            }
         });
 
-        $('.nextButton').click(function () {
-
+        $('.nextButton').click(function ()
+        {
+            currentPage = $('#hCurrentPage').val();
+            totalPages = $('#hTotalPages').val();
+            if (totalPages <= currentPage + 1)
+            {
+                ChangeResultsPage(currentPage + 1);
+            }
         });
 
         $('#topPageSelect').change(function () {
-
+            ChangeResultsPage($('#topPageSelect').val());
         });
 
         $('#bottomPageSelect').change(function () {
-
+            ChangeResultsPage($('#bottomPageSelect').val());
         });
     });
 </script>
