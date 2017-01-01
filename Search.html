@@ -32,6 +32,7 @@
     </style>
 </head>
 <body>
+    <nav ID="siteNav" class="navbar navbar-default"></nav>
     <div class="container-fluid">
         <!-- Search filters -->
         <div class="form-group">            
@@ -58,10 +59,7 @@
                             <div class="form-group">
                                 <label for="binderSelect">Binder #</label>
                                 <select id="binderSelect" class="form-control">
-                                    <option value="Any" selected>Any</option>
-                                    <!--<option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>-->                                    
+                                    <option value="Any" selected>Any</option>                                
                                 </select>
                             </div>
                             <div class="form-group">
@@ -79,7 +77,7 @@
                     </div>                             
                 </div>
             </div>
-            <a for="searchFilters" data-toggle="collapse" href="#searchFilters" class="btn btn-default btn-lg btn-block filter-button collapsed">Filters</a>
+            <a for="searchFilters" id="searchFiltersToggle" data-toggle="collapse" href="#searchFilters" class="btn btn-default btn-lg btn-block filter-button collapsed">Filters</a>
         </div>    
                                       
         <!-- Alerts -->
@@ -89,15 +87,14 @@
         </div>
 
         <!-- Top page controls -->
-        <div class="row">
+        <div class="row pageControls">
             <div class="col-xs-3 col-lg-3">
                 <a href="#" aria-label="Previous" class="previousButton btn btn-sm btn-default btn-block form-control">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </div>
             <div class="col-xs-6 col-lg-6">                
-                <select id="topPageSelect" class="form-control">
-                </select>
+                <select id="topPageSelect" class="form-control"></select>
             </div>
             <div class="col-xs-3 col-lg-3">
                 <a href="#" aria-label="Next" class="nextButton btn btn-sm btn-default btn-block form-control">
@@ -114,19 +111,17 @@
         </div>
 
         <!-- Loading panel -->
-        <div id="loadingPanel" class="hidden">
-        </div>
+        <div id="loadingPanel" class="hidden"></div>
 
         <!-- Bottom page controls -->
-        <div class="row">
+        <div class="row pageControls">
             <div class="col-xs-3 col-lg-3">
                 <a href="#" aria-label="Previous" class="previousButton btn btn-sm btn-default btn-block form-control">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
             </div>
             <div class="col-xs-6 col-lg-6">
-                <select id="bottomPageSelect" class="form-control">                    
-                </select>
+                <select id="bottomPageSelect" class="form-control"></select>
             </div>
             <div class="col-xs-3 col-lg-3">
                 <a href="#" aria-label="Next" class="nextButton btn btn-sm btn-default btn-block form-control">
@@ -136,8 +131,8 @@
         </div>
 
         <!-- Hidden fields -->
-        <input id="hCurrentPage" type="hidden" />
-        <input id="hTotalPages" type="hidden" />
+        <input id="hCurrentPage" type="hidden" value="-1"/>
+        <input id="hTotalPages" type="hidden" value="-1" />
     </div>
 </body>
 </html>
@@ -153,15 +148,19 @@
 
     function BuildBinderSelect()
     {                
-        CDServiceAJAX('POST', 'GetBindersCount', null, function (result) {
-            console.log("GetBindersCount result:");
-            console.dir(result);                
+        CDServiceAJAX('POST', 'GetBindersCount', null, function (result) {            
             for (i = 1; i <= result; i++)
             {
                 // Add options to binderSelect
                 $('#binderSelect').append("<option value='" + i + "'>" + i + "</option>");
             }           
-        }, null);        
+        }, 
+        function (error)
+        {
+            console.log("Error in BuildBinderSelect: " + error);
+            $('#errorMessage').text(error);
+            $('#errorAlert').removeClass('hidden');
+        });        
     }
 
     function BuildMediaDiv(ID, imageUrl_sm, artist, title, binder, mixed, numDiscs)
@@ -259,7 +258,8 @@
         if (0 < searchInput.SearchCD.Artist.length) { searchURL += "&artist=" + searchInput.SearchCD.Artist; }
         if (0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
         if (-1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }
-        if (true === searchInput.filter_IsMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
+        console.log("searchInput.filter_IsMixed: " + searchInput.Filter_isMixed);
+        if (true == searchInput.Filter_isMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
         if (0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
         if (0 < searchInput.SearchCD.misc.length) { searchURL += "&misc=" + searchInput.SearchCD.misc; }
         0 < searchInput.Page ? searchURL += "&page=" + searchInput.Page : searchURL += "&page=1";
@@ -300,7 +300,13 @@
 
                 $('#totalNumRowsHeading').text(result.totalNumRows + " results found.");                
                 $('#searchResults').removeClass('hidden');
-            }, null);
+            },
+            function (error)
+            {
+                console.log("Error in LoadSearchResults: " + error);
+                $('#errorMessage').text(error);
+                $('#errorAlert').removeClass('hidden');
+            });
     }
 
     function SetSearchFilters(input, callback)
@@ -350,27 +356,27 @@
         }
         else
         {
-            // Expand search filters
-            if ($('#searchFilters').hasClass('collapsed')) { $('#searchFilters').removeClass('collapsed'); }
+            // Expand search filters            
+            $('#searchFilters').collapse('show');
 
             // Hide search results div
             if (false == $('#searchResults').hasClass('hidden')) { $('#searchResults').addClass('hidden'); }
 
-            // Disable page select controls, previous/next page buttons
-            $('.previousButton').prop('disabled', true);
-            $('.nextButton').prop('disabled', true);
-            $('#topPageSelect').prop('disabled', true);
-            $('#bottomPageSelect').prop('disabled', true);
+            // Hide page select controls, previous/next page buttons     
+            $('div.pageControls').addClass('hidden');
         }
 
         $('#searchButton').click(function () {         
             // Setup new search, grab search options from page filters
-            input = new Empty_SearchCDs_Advanced_Input();
-            input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
+            input = new Empty_SearchCDs_Advanced_Input();            
             input.Page = 1;                        
             input.SearchCD.Artist = $('#artistInput').text();
             input.SearchCD.binder = "Any" == $('#binderSelect option:selected').text() ? -1 : $('#binderSelect option:selected').text();
+
+            // Filter_isMixed is used to determine whether to filter by the isMixed field
+            input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
             input.SearchCD.isMixed = "Yes" == $('#mixedSelect option:selected').text() ? true : false;
+
             input.SearchCD.misc = $('#miscInput').text();
             input.SearchCD.numDiscs = $('#numberDiscsInput').text();
             input.SearchCD.Title = $('#titleInput').text();                        
