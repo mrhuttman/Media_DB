@@ -282,7 +282,7 @@
 
                 // Loop through CDs, add to search results div                
                 console.dir(result.CDs);                
-                for (i = 1; i <= result.NumRows; i++)
+                for (i = 0; i < result.NumRows; i++)
                 {
                     $('#resultsList').append(
                         BuildMediaDiv(
@@ -291,9 +291,10 @@
                             result.CDs[i].Artist,
                             result.CDs[i].Title,
                             result.CDs[i].binder,
+                            result.CDs[i].isMixed,
                             result.CDs[i].numDiscs
                             )
-                        );
+                        ); 
                 }
                                
                 // Note: pageSize is currently 20, same as defined in WCF service
