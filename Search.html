@@ -203,6 +203,9 @@
     // This function handles setting all of the pager controls/selects and related controls
     function BuildPageElements(totalRows, pageSize, currentPage)
     {
+        // Check for rows, hide page select controls if 0
+        if (0 == totalRows) { $('div.pageControls').addClass('hidden'); }
+
         numPages = Math.ceil(totalRows / pageSize);
         for (i = 1; i <= numPages; i++)
         {
@@ -257,18 +260,19 @@
         searchURL = "Search.html?Search=true";
         if (0 < searchInput.SearchCD.Artist.length) { searchURL += "&artist=" + searchInput.SearchCD.Artist; }
         if (0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
-        if (-1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }
-        console.log("searchInput.filter_IsMixed: " + searchInput.Filter_isMixed);
+        if (-1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }        
         if (true == searchInput.Filter_isMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
         if (0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
         if (0 < searchInput.SearchCD.misc.length) { searchURL += "&misc=" + searchInput.SearchCD.misc; }
         0 < searchInput.Page ? searchURL += "&page=" + searchInput.Page : searchURL += "&page=1";
-        //window.location.href = searchURL;        
-        console.log(searchURL);
+        window.location.href = searchURL;                
     }
 
     function LoadSearchResults(searchInput)
     {
+        console.log("searchInput: ");
+        console.dir(searchInput);
+
         // Load search results based on URL search params
         CDServiceAJAX('POST',
             'SearchCDs_Advanced', JSON.stringify(searchInput),
@@ -296,9 +300,9 @@
                 // TODO: Add page size select, add page size var to service
 
                 // Set page select controls & heading with current page # & total num pages 
-                BuildPageElements(result.totalNumRows, pageSize, searchInput.Page);
+                BuildPageElements(result.TotalNumRows, pageSize, searchInput.Page);
 
-                $('#totalNumRowsHeading').text(result.totalNumRows + " results found.");                
+                $('#totalNumRowsHeading').text(result.TotalNumRows + " results found.");                
                 $('#searchResults').removeClass('hidden');
             },
             function (error)
@@ -312,8 +316,8 @@
     function SetSearchFilters(input, callback)
     {
         // Fill search filters with values from URL search params 
-        if (null !== input.SearchCD.Artist) { $('#artistInput').text(input.SearchCD.Artist); }
-        if (null !== input.SearchCD.Title) { $('#titleInput').text(input.SearchCD.Title); }
+        if (null !== input.SearchCD.Artist) { $('#artistInput').val(input.SearchCD.Artist); }
+        if (null !== input.SearchCD.Title) { $('#titleInput').val(input.SearchCD.Title); }
         if (null !== input.SearchCD.binder) { $("#binderSelect option[value='" + input.SearchCD.binder + "']").prop('selected', true); }
         if (input.Filter_isMixed)
         {
@@ -325,8 +329,8 @@
         {
             $("#mixedSelect option[value='Any']").prop('selected', true);
         }
-        if (null !== input.SearchCD.numDiscs) { $('#numberDiscsInput').text(input.SearchCD.numDiscs); }
-        if (null !== input.SearchCD.misc) { $('#miscInput').text(input.SearchCD.misc); }
+        if (null !== input.SearchCD.numDiscs) { $('#numberDiscsInput').val(input.SearchCD.numDiscs); }
+        if (null !== input.SearchCD.misc) { $('#miscInput').val(input.SearchCD.misc); }
         callback && callback(input);
     }
 
@@ -370,16 +374,16 @@
             // Setup new search, grab search options from page filters
             input = new Empty_SearchCDs_Advanced_Input();            
             input.Page = 1;                        
-            input.SearchCD.Artist = $('#artistInput').text();
+            input.SearchCD.Artist = $('#artistInput').val();
             input.SearchCD.binder = "Any" == $('#binderSelect option:selected').text() ? -1 : $('#binderSelect option:selected').text();
 
             // Filter_isMixed is used to determine whether to filter by the isMixed field
             input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
             input.SearchCD.isMixed = "Yes" == $('#mixedSelect option:selected').text() ? true : false;
 
-            input.SearchCD.misc = $('#miscInput').text();
-            input.SearchCD.numDiscs = $('#numberDiscsInput').text();
-            input.SearchCD.Title = $('#titleInput').text();                        
+            input.SearchCD.misc = $('#miscInput').val();
+            input.SearchCD.numDiscs = $('#numberDiscsInput').val();
+            input.SearchCD.Title = $('#titleInput').val();                        
             console.log("searchButton click event, input var: ");
             console.dir(input);
             LoadSearchURL(input);         
