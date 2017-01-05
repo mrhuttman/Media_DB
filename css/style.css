@@ -2,4 +2,14 @@
 .hidden{
     display:none;
 }
-    
+
+.disabled {
+    background-color: gray;
+    pointer-events: none;  
+    cursor: not-allowed;  
+}
+
+.cd-cover-sm {
+    max-height: 64px;
+    max-width: 64px;
+}

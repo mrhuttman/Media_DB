@@ -82,8 +82,7 @@
         $('#siteNav').load('TopMenu.html');
 
         // Get the ID # of the CD to edit/delete
-        cdID = getURLParameter('ID');
-        console.log('isNaN(cdID): ' + isNaN(cdID));
+        cdID = getURLParameter('ID');        
 
         if (isNaN(cdID))
         {                        
@@ -94,9 +93,7 @@
         {
             // Pull down & fill the form with CD details
             CDServiceAJAX('POST', 'GetCD', cdID,
-                function (result) {
-                    console.log("GetCD result: ");
-                    console.dir(result);                    
+                function (result) {                                     
                     $('#artistInput').val(result.Artist);
                     $('#titleInput').val(result.Title);
                     $('#imageSmInput').val(result.imageUrl_sm);
@@ -108,7 +105,7 @@
                     $('#binderInput').val(result.binder);
                     $('#numberDiscsInput').val(result.numDiscs);
                     $('#miscInput').val(result.misc);
-                    $('#cdIDSpan').text(result.itemNo_pk);
+                    $('#cdIDSpan').text(result.itemNo_pk);                    
                 }, 
                 function (error) {
                     console.log(error);
@@ -139,10 +136,10 @@
             updatedCD.numDiscs = $('#numberDiscsInput').val();
             updatedCD.misc = $('#miscInput').val();
 
-            console.log("updatedCD: ");
-            console.dir(updatedCD);
-            console.log("JSON stringified: ");
-            console.log(JSON.stringify(updatedCD));
+            //console.log("updatedCD: ");
+            //console.dir(updatedCD);
+            //console.log("JSON stringified: ");
+            //console.log(JSON.stringify(updatedCD));
 
             CDServiceAJAX('POST', 'UpdateCD', JSON.stringify(updatedCD),
                 function (result) {                    

@@ -24,12 +24,19 @@ function CDServiceAJAX(type, method, data, successCallback, errorCallback)
 }
 
 // Check if an image file exists on the server
-function checkImage(imageSrc, good, bad)
-{
+function imageExists(imageSrc, callback)
+{    
     var img = new Image();
-    img.onload = good;
-    img.onerror = bad;
+    img.onload = function (){ callback && callback(true); };
+    img.onerror = function (){ callback && callback(false); };
     img.src = imageSrc;
+}
+
+// Called on img elements that have an onerror attribute (search results)
+function imageError(img)
+{
+    // This will eventually set a different generic image based on class (cd-cover-sm, etc.)
+    img.src = "/Images/compact-disc-icon.png";
 }
 
 // Hide Bootstrap alerts without removing them from the DOM
