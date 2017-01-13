@@ -100,8 +100,8 @@
             newCD.imageUrl_sm = $('#imageSmInput').val();
             newCD.imageUrl_lg = $('#imageLgInput').val();
             newCD.isMixed = $('#isMixedInput').is(':checked') ? true : false;
-            newCD.binder = $('#binderInput').val();
-            newCD.numDiscs = $('#numberDiscsInput').val();
+            newCD.binder = parseInt($('#binderInput').val());
+            newCD.numDiscs = parseInt($('#numberDiscsInput').val());
             newCD.misc = $('#miscInput').val();
 
             //console.log("NewCD: ");
@@ -109,13 +109,23 @@
             //console.log("JSON stringified: ");
             //console.log(JSON.stringify(newCD));
 
+            // TODO: Add validation for Artist & Title fields
+
             CDServiceAJAX('POST', 'AddCD', JSON.stringify(newCD),
                 function (result) {
-                    //console.log("AddCD result: " + result);
-                    
-                    // Show CD added alert
-                    $('#successAlert').removeClass('hidden');
-
+                    console.log("AddCD result: " + result);
+                                        
+                    if ("AddCD: Save was not successful." == result)
+                    {
+                        // Show error alert if error message comes back from service
+                        $('#errorAlert').removeClass('hidden');
+                        $('#errorMessage').val(result);
+                    }
+                    else
+                    {
+                        $('#successAlert').removeClass('hidden');
+                    }
+                                                          
                     // Clear form fields
                     $('#artistInput').val('');
                     $('#titleInput').val('');
@@ -125,6 +135,8 @@
                     $('#binderInput').val('');
                     $('#numberDiscsInput').val('');
                     $('#miscInput').val('');
+
+                    $('#artistInput').focus();
                 },
                 function (error) {
                     console.log("AddCD failed!");
