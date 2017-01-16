@@ -189,7 +189,7 @@
     }
 
     // This function handles setting all of the pager controls/selects and related controls
-    function BuildPageElements(totalRows, pageSize, currentPage)
+    function BuildPageSelectElements(totalRows, pageSize, currentPage)
     {
         // Check for rows, hide page select controls if 0
         if (0 == totalRows) { $('div.pageControls').addClass('hidden'); }
@@ -202,8 +202,6 @@
             $('#bottomPageSelect').append("<option value='" + i + "'>" + i + "</option>");            
         }
         // Set selected options to current page
-        //$("#topPageSelect option[value='" + currentPage + "']").prop('selected', true);
-        //$("#bottomPageSelect option[value='" + currentPage + "']").prop('selected', true);
         $("#topPageSelect").val(currentPage);
         $("#bottomPageSelect").val(currentPage);
 
@@ -222,7 +220,7 @@
     function ChangeResultsPage(page)
     {
         // Get search params from URL - I'm doing this instead of pulling from page filters to preserve previous search terms
-        searchInput = GetSearchURLParams();
+        searchInput = GetSearchURLParams();        
         searchInput.Page = page;
         LoadSearchURL(searchInput);
     }
@@ -235,11 +233,8 @@
         input.SearchCD.Artist = getURLParameter('artist');
         input.SearchCD.Title = getURLParameter('title');
         input.SearchCD.binder = getURLParameter('binder');
-
-        console.log("isMixed URL param: " + getURLParameter('isMixed'));
         input.SearchCD.isMixed = 'true' == getURLParameter('isMixed') ? true : false;
         input.Filter_isMixed = null === getURLParameter('isMixed') ? false : true;
-
         input.SearchCD.numDiscs = getURLParameter('numDiscs');
         input.SearchCD.misc = getURLParameter('misc');
         return input;
@@ -248,30 +243,23 @@
     function LoadSearchURL(searchInput)
     {
         searchURL = "Search.html?Search=true";
-        if (0 < searchInput.SearchCD.Artist.length) { searchURL += "&artist=" + searchInput.SearchCD.Artist; }
-        if (0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
-        if (-1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }        
+        if (null !== searchInput.SearchCD.Artist && 0 < searchInput.SearchCD.Artist.length) { searchURL += "&artist=" + searchInput.SearchCD.Artist; }
+        if (null !== searchInput.SearchCD.Title && 0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
+        if (null !== searchInput.SearchCD.binder && -1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }
         if (true == searchInput.Filter_isMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
-        if (0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
-        if (0 < searchInput.SearchCD.misc.length) { searchURL += "&misc=" + searchInput.SearchCD.misc; }
+        if (null !== searchInput.SearchCD.numDiscs && 0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
+        if (null !== searchInput.SearchCD.misc && 0 < searchInput.SearchCD.misc.length) { searchURL += "&misc=" + searchInput.SearchCD.misc; }
         0 < searchInput.Page ? searchURL += "&page=" + searchInput.Page : searchURL += "&page=1";
         window.location.href = searchURL;                
     }
 
     function LoadSearchResults(searchInput)
     {
-        console.log("searchInput: ");
-        console.dir(searchInput);
-
         // Load search results based on URL search params
         CDServiceAJAX('POST',
             'SearchCDs_Advanced', JSON.stringify(searchInput),
             function (result) {
-                console.log("Search result: ");
-                console.dir(result);
-
-                // Loop through CDs, add to search results div                
-                console.dir(result.CDs);                
+                // Loop through CDs, add to search results div                               
                 for (i = 0; i < result.NumRows; i++)
                 {
                     $('#resultsList').append(
@@ -291,7 +279,7 @@
                 // TODO: Add page size select, add page size var to service
 
                 // Set page select controls & heading with current page # & total num pages 
-                BuildPageElements(result.TotalNumRows, pageSize, searchInput.Page);
+                BuildPageSelectElements(result.TotalNumRows, pageSize, searchInput.Page);
 
                 $('#totalNumRowsHeading').text(result.TotalNumRows + " results found.");                
                 $('#searchResults').removeClass('hidden');
@@ -377,25 +365,23 @@
             input.SearchCD.misc = $('#miscInput').val();
             input.SearchCD.numDiscs = $('#numberDiscsInput').val();
             input.SearchCD.Title = $('#titleInput').val();                        
-            console.log("searchButton click event, input var: ");
-            console.dir(input);
             LoadSearchURL(input);         
         });
 
         $('.previousButton').click(function ()
         {
-            currentPage = $('#hCurrentPage').val();
+            currentPage = Number($('#hCurrentPage').val());
             if (0 < currentPage - 1)
             {
                 ChangeResultsPage(currentPage - 1);
             }
         });
 
-        $('.nextButton').click(function ()
+        $('.nextButton').click(function (e)
         {
-            currentPage = $('#hCurrentPage').val();
-            totalPages = $('#hTotalPages').val();
-            if (totalPages <= currentPage + 1)
+            currentPage = Number($('#hCurrentPage').val());
+            totalPages = Number($('#hTotalPages').val());
+            if (totalPages >= currentPage + 1)
             {
                 ChangeResultsPage(currentPage + 1);
             }
