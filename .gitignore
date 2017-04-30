@@ -244,3 +244,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/App_Data/PublishProfiles/Local Publish.pubxml

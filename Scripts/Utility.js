@@ -1,9 +1,14 @@
 ﻿// AJAX helper function - calls WCF web service
 function CDServiceAJAX(type, method, data, successCallback, errorCallback)
 {
+    // Test
+    var url = 'http://localhost:64246/Media_DB/CDServiceWCF.svc/' + method + '?callback=?';
+    // Prod
+    //var url = 'http://mediadb.mikehuttman.com/Media_DB/CDServiceWCF.svc/' + method + '?callback=?';
+
     $.ajax({
         type: type,
-        url: 'http://localhost:64246/Media_DB/CDServiceWCF.svc/' + method + '?callback=?',
+        url: url,
         contentType: 'application/json; charset=utf-8',        
         data: data,
         dataType: 'jsonp',

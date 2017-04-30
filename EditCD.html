@@ -51,6 +51,12 @@
                     Mixed?
                 </label>
             </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="isSingleInput" />
+                    Single?
+                </label>
+            </div>
             <div class="form-group">
                 <label for="binderInput">Binder #</label>
                 <input type="number" class="form-control" id="binderInput" />
@@ -102,6 +108,10 @@
                     {
                         $('#isMixedInput').addClass('checked').prop('checked', true);
                     }
+                    if (result.isSingle)
+                    {
+                        $('#isSingleInput').addClass('checked').prop('checked', true);
+                    }
                     $('#binderInput').val(result.binder);
                     $('#numberDiscsInput').val(result.numDiscs);
                     $('#miscInput').val(result.misc);
@@ -132,14 +142,10 @@
             updatedCD.imageUrl_sm = $('#imageSmInput').val();
             updatedCD.imageUrl_lg = $('#imageLgInput').val();
             updatedCD.isMixed = $('#isMixedInput').is(':checked') ? true : false;
+            updatedCD.isSingle = $('#isSingleInput').is(':checked') ? true : false;
             updatedCD.binder = $('#binderInput').val();
             updatedCD.numDiscs = $('#numberDiscsInput').val();
-            updatedCD.misc = $('#miscInput').val();
-
-            //console.log("updatedCD: ");
-            //console.dir(updatedCD);
-            //console.log("JSON stringified: ");
-            //console.log(JSON.stringify(updatedCD));
+            updatedCD.misc = $('#miscInput').val();            
 
             CDServiceAJAX('POST', 'UpdateCD', JSON.stringify(updatedCD),
                 function (result) {                    

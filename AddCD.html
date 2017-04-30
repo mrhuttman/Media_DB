@@ -29,6 +29,7 @@
             this.imageUrl_sm = imageUrl_sm;
             this.imageUrl_lg = imageUrl_lg;
             this.isMixed = isMixed;
+            this.isSingle = isSingle
             this.binder = binder;
             this.numDiscs = numDiscs;
             this.misc = misc; 
@@ -55,6 +56,12 @@
                     <input type="checkbox" id="isMixedInput" />
                     Mixed?
                 </label>                
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="isSingleInput" />
+                    Single?
+                </label>
             </div>
             <div class="form-group">
                 <label for="binderInput">Binder #</label>
@@ -100,15 +107,10 @@
             newCD.imageUrl_sm = $('#imageSmInput').val();
             newCD.imageUrl_lg = $('#imageLgInput').val();
             newCD.isMixed = $('#isMixedInput').is(':checked') ? true : false;
+            newCD.isSingle = $('#isSingleInput').is(':checked') ? true : false;
             newCD.binder = parseInt($('#binderInput').val());
             newCD.numDiscs = parseInt($('#numberDiscsInput').val());
             newCD.misc = $('#miscInput').val();
-
-            //console.log("NewCD: ");
-            //console.dir(newCD);
-            //console.log("JSON stringified: ");
-            //console.log(JSON.stringify(newCD));
-
             // TODO: Add validation for Artist & Title fields
 
             CDServiceAJAX('POST', 'AddCD', JSON.stringify(newCD),
@@ -131,7 +133,8 @@
                     $('#titleInput').val('');
                     $('#imageSmInput').val('');
                     $('#imageLgInput').val('');
-                    $('#isMixedInput').removeClass('checked').prop('checked', false);                    
+                    $('#isMixedInput').removeClass('checked').prop('checked', false);
+                    $('#isSingleInput').removeClass('checked').prop('checked', false);
                     $('#binderInput').val('');
                     $('#numberDiscsInput').val('');
                     $('#miscInput').val('');

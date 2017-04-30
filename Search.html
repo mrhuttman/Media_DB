@@ -57,6 +57,14 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label for="singleSelect">Single</label>
+                                <select id="singleSelect" class="form-control">
+                                    <option value="Any" selected>Any</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label for="binderSelect">Binder #</label>
                                 <select id="binderSelect" class="form-control">
                                     <option value="Any" selected>Any</option>                                
@@ -164,7 +172,7 @@
         });        
     }
 
-    function BuildMediaDiv(ID, imageUrl_sm, artist, title, binder, mixed, numDiscs)
+    function BuildMediaDiv(ID, imageUrl_sm, artist, title, binder, mixed, single, numDiscs)
     {
         // Bootstrap media object: http://getbootstrap.com/components/#media
         editLink = "<a href='EditCD.html?ID=" + ID + "'>";
@@ -183,6 +191,7 @@
                 media += "</a></h4>";
                 media += "Binder #" + binder + " - Discs: " + numDiscs + "<br>";
                 media += (mixed) ? "<b>Mixed</b>" : "<b>Unmixed</b>";
+                media += (single) ? " | <b>CD Single</b>" : " | <b>Album</b>";
             media += "</div>";
         media += "</div>";        
         return media;
@@ -235,6 +244,8 @@
         input.SearchCD.binder = getURLParameter('binder');
         input.SearchCD.isMixed = 'true' == getURLParameter('isMixed') ? true : false;
         input.Filter_isMixed = null === getURLParameter('isMixed') ? false : true;
+        input.SearchCD.isSingle = 'true' == getURLParameter('isSingle') ? true : false;
+        input.Filter_isSingle = null === getURLParameter('isSingle') ? false : true;
         input.SearchCD.numDiscs = getURLParameter('numDiscs');
         input.SearchCD.misc = getURLParameter('misc');
         return input;
@@ -247,6 +258,7 @@
         if (null !== searchInput.SearchCD.Title && 0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
         if (null !== searchInput.SearchCD.binder && -1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }
         if (true == searchInput.Filter_isMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
+        if (true == searchInput.Filter_isSingle) { searchURL += "&isSingle=" + searchInput.SearchCD.isSingle; }
         if (null !== searchInput.SearchCD.numDiscs && 0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
         if (null !== searchInput.SearchCD.misc && 0 < searchInput.SearchCD.misc.length) { searchURL += "&misc=" + searchInput.SearchCD.misc; }
         0 < searchInput.Page ? searchURL += "&page=" + searchInput.Page : searchURL += "&page=1";
@@ -270,6 +282,7 @@
                             result.CDs[i].Title,
                             result.CDs[i].binder,
                             result.CDs[i].isMixed,
+                            result.CDs[i].isSingle,
                             result.CDs[i].numDiscs
                             )
                         ); 
@@ -307,6 +320,16 @@
         else
         {
             $("#mixedSelect option[value='Any']").prop('selected', true);
+        }
+        if (input.Filter_isSingle)
+        {
+            true == input.SearchCD.isMixed
+            ? $("#singleSelect option[value='Yes']").prop('selected', true)
+            : $("#singleSelect option[value='No']").prop('selected', true);
+        }
+        else
+        {
+            $("#singleSelect option[value='Any']").prop('selected', true);
         }
         if (null !== input.SearchCD.numDiscs) { $('#numberDiscsInput').val(input.SearchCD.numDiscs); }
         if (null !== input.SearchCD.misc) { $('#miscInput').val(input.SearchCD.misc); }
@@ -361,6 +384,10 @@
             // Filter_isMixed is used to determine whether to filter by the isMixed field
             input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
             input.SearchCD.isMixed = "Yes" == $('#mixedSelect option:selected').text() ? true : false;
+
+            // Same with Filter_isSelect
+            input.Filter_isSingle = "Any" == $('#singleSelect option:selected').text() ? false : true;
+            input.SearchCD.isSingle = "Yes" == $('#singleSelect option:selected').text() ? true : false;
 
             input.SearchCD.misc = $('#miscInput').val();
             input.SearchCD.numDiscs = $('#numberDiscsInput').val();
