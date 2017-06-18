@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Media DB | Add CD</title>
-	<meta charset="utf-8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="css/bootstrap.min.css" rel="stylesheet" />
@@ -15,14 +15,14 @@
         <!-- Alerts -->
         <div ID="successAlert" class="alert alert-success alert-dismissible hidden" role="alert">
             <button type="button" class="close" data-hide="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <strong>CD successfully added.</strong> 
+            <strong>CD successfully added.</strong>
         </div>
         <div ID="errorAlert" class="alert alert-warning alert-dismissible hidden" role="alert">
             <button type="button" class="close" data-hide="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <strong>Error:</strong> <span id="errorMessage"></span>
         </div>
 
-        <!--            
+        <!--
             CD object structure:
             this.Artist = artist;
             this.Title = title;
@@ -32,8 +32,8 @@
             this.isSingle = isSingle
             this.binder = binder;
             this.numDiscs = numDiscs;
-            this.misc = misc; 
-        -->        
+            this.misc = misc;
+        -->
         <h2>Add CD</h2>
         <form>
             <div class="form-group">
@@ -46,8 +46,8 @@
             </div>
             <div class="form-group">
                 <label for="imageSmInput">Image URL(s)</label>
-                <input type="text" class="form-control" id="imageSmInput" placeholder="Small" />                
-            </div>            
+                <input type="text" class="form-control" id="imageSmInput" placeholder="Small" />
+            </div>
             <div class="form-group">
                 <input type="text" class="form-control" id="imageLgInput" placeholder="Large" />
             </div>
@@ -55,7 +55,7 @@
                 <label>
                     <input type="checkbox" id="isMixedInput" />
                     Mixed?
-                </label>                
+                </label>
             </div>
             <div class="checkbox">
                 <label>
@@ -79,56 +79,68 @@
         </form>
 
     </div>
-</body>
-</html>
 
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="Scripts/Objects.js"></script>
-<script src="Scripts/Utility.js"></script>
-<script src="Scripts/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="Scripts/Objects.js"></script>
+    <script src="Scripts/Utility.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        // Load site navigation bar
-        $('#siteNav').load('TopMenu.html');
+    <script>
+        $(document).ready(function () {
+            // Load site navigation bar
+            $('#siteNav').load('TopMenu.html');
 
-        $('#saveButton').click(function (e) {
-            //http://stackoverflow.com/questions/18637181/jquery-click-method-reloads-the-page
-            e.preventDefault();
+            // Set default values
+            $('#numberDiscsInput').val('1');
 
-            // If alerts were showing, hide them
-            if (false == $('#successAlert').hasClass('hidden')) { $('#successAlert').addClass('hidden'); }
-            if (false == $('#errorAlert').hasClass('hidden')) { $('#errorAlert').addClass('hidden'); }
+            // Save CD on saveButton click or when Enter is pressed
+            $('#saveButton').click(function (e)
+            {
+                //http://stackoverflow.com/questions/18637181/jquery-click-method-reloads-the-page
+                e.preventDefault();
+                SaveCD();               
+            });
 
-            // Build the CD object to pass into the web service
-            newCD = new Empty_Music_CD();
-            newCD.Artist = $('#artistInput').val();
-            newCD.Title = $('#titleInput').val();
-            newCD.imageUrl_sm = $('#imageSmInput').val();
-            newCD.imageUrl_lg = $('#imageLgInput').val();
-            newCD.isMixed = $('#isMixedInput').is(':checked') ? true : false;
-            newCD.isSingle = $('#isSingleInput').is(':checked') ? true : false;
-            newCD.binder = parseInt($('#binderInput').val());
-            newCD.numDiscs = parseInt($('#numberDiscsInput').val());
-            newCD.misc = $('#miscInput').val();
-            // TODO: Add validation for Artist & Title fields
+            document.onkeydown = function (e)
+            {
+                e.preventDefault();
+                if (13 == e.keyCode) { SaveCD(); }
+            };
 
-            CDServiceAJAX('POST', 'AddCD', JSON.stringify(newCD),
-                function (result) {
+            function SaveCD()
+            {
+                // If alerts were showing, hide them
+                if (false == $('#successAlert').hasClass('hidden')) { $('#successAlert').addClass('hidden'); }
+                if (false == $('#errorAlert').hasClass('hidden')) { $('#errorAlert').addClass('hidden'); }
+
+                // Build the CD object to pass into the web service
+                newCD = new Empty_Music_CD();
+                newCD.Artist = $('#artistInput').val();
+                newCD.Title = $('#titleInput').val();
+                newCD.imageUrl_sm = $('#imageSmInput').val();
+                newCD.imageUrl_lg = $('#imageLgInput').val();
+                newCD.isMixed = $('#isMixedInput').is(':checked') ? true : false;
+                newCD.isSingle = $('#isSingleInput').is(':checked') ? true : false;
+                newCD.binder = parseInt($('#binderInput').val());
+                newCD.numDiscs = parseInt($('#numberDiscsInput').val());
+                newCD.misc = $('#miscInput').val();
+                // TODO: Add validation for Artist & Title fields
+
+                CDServiceAJAX('POST', 'AddCD', JSON.stringify(newCD),
+                function (result)
+                {
                     console.log("AddCD result: " + result);
-                                        
-                    if ("AddCD: Save was not successful." == result)
-                    {
+
+                    if ("AddCD: Save was not successful." == result) {
                         // Show error alert if error message comes back from service
                         $('#errorAlert').removeClass('hidden');
                         $('#errorMessage').val(result);
                     }
-                    else
-                    {
+                    else {
                         $('#successAlert').removeClass('hidden');
                     }
-                                                          
-                    // Clear form fields
+
+                    // Reset form fields
                     $('#artistInput').val('');
                     $('#titleInput').val('');
                     $('#imageSmInput').val('');
@@ -136,12 +148,13 @@
                     $('#isMixedInput').removeClass('checked').prop('checked', false);
                     $('#isSingleInput').removeClass('checked').prop('checked', false);
                     $('#binderInput').val('');
-                    $('#numberDiscsInput').val('');
+                    $('#numberDiscsInput').val('1');
                     $('#miscInput').val('');
 
                     $('#artistInput').focus();
                 },
-                function (error) {
+                function (error)
+                {
                     console.log("AddCD failed!");
                     console.log(error);
 
@@ -149,6 +162,9 @@
                     $('#errorAlert').removeClass('hidden');
                     $('#errorMessage').val(error);
                 });
+            }
         });
-    });
-</script>
+    </script>
+
+</body>
+</html>
