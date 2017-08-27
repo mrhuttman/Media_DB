@@ -38,44 +38,44 @@
         <form>
             <div class="form-group">
                 <label for="artistInput">Artist</label>
-                <input type="text" class="form-control" id="artistInput" placeholder="Artist" />
+                <input type="text" class="form-control" id="artistInput" tabindex="1" placeholder="Artist" />
             </div>
             <div class="form-group">
                 <label for="titleInput">Title</label>
-                <input type="text" class="form-control" id="titleInput" placeholder="Title" />
+                <input type="text" class="form-control" id="titleInput" tabindex="2" placeholder="Title" />
             </div>
             <div class="form-group">
                 <label for="binderInput">Binder #</label>
-                <input type="number" class="form-control" id="binderInput" />
+                <input type="number" class="form-control" id="binderInput" tabindex="3" />
             </div>
             <div class="form-group">
                 <label for="imageSmInput">Image URL(s)</label>
-                <input type="text" class="form-control" id="imageSmInput" placeholder="Small" />
+                <input type="text" class="form-control" id="imageSmInput" tabindex="4" placeholder="Small" />
             </div>
             <div class="form-group">
-                <input type="text" class="form-control" id="imageLgInput" placeholder="Large" />
+                <input type="text" class="form-control" id="imageLgInput" tabindex="5" placeholder="Large" />
             </div>
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" id="isMixedInput" />
+                    <input type="checkbox" id="isMixedInput" tabindex="6" />
                     Mixed?
                 </label>
             </div>
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" id="isSingleInput" />
+                    <input type="checkbox" id="isSingleInput" tabindex="7" />
                     Single?
                 </label>
             </div>            
             <div class="form-group">
                 <label for="numberDiscsInput"># of Discs</label>
-                <input type="number" class="form-control" id="numberDiscsInput" />
+                <input type="number" class="form-control" id="numberDiscsInput" tabindex="8" />
             </div>
             <div class="form-group">
                 <label for="miscInput">Misc</label>
-                <input type="text" class="form-control" id="miscInput" placeholder="Misc." />
+                <input type="text" class="form-control" id="miscInput" tabindex="9" placeholder="Misc." />
             </div>
-            <button ID="saveButton" class="btn btn-success btn-lg btn-block"><span ID="saveButtonIcon" class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+            <button ID="saveButton" class="btn btn-success btn-lg btn-block" tabindex="10"><span ID="saveButtonIcon" class="glyphicon glyphicon-floppy-disk"></span> Save</button>
         </form>
 
     </div>
@@ -173,9 +173,9 @@
                 // Validate required fields
                 var isValidCD = true;
                 var validationErrors = "";
-                if (0 == newCD.Artist.length) { isValidCD = false; validationErrors += "Artist is required."; }
-                if (0 == newCD.Title.length) { isValidCD = false; validationErrors += "Title is required."; }
-                if (0 >= newCD.binder) { isValidCD = false; validationErrors += "Binder must be greater than 0."; }
+                if (0 == newCD.Artist.length) { isValidCD = false; validationErrors += "Artist is required. "; }
+                if (0 == newCD.Title.length) { isValidCD = false; validationErrors += "Title is required. "; }
+                if (0 >= newCD.binder) { isValidCD = false; validationErrors += "Binder must be greater than 0. "; }
 
                 if (isValidCD)
                 {
@@ -189,8 +189,8 @@
                             // CDServiceAJAX success callback
                             if (-1 !== result.indexOf("ERROR"))
                             {
-                                $('#errorAlert').removeClass('hidden');
-                                $('#errorMessage').val(result);
+                                $('#errorMessage').text(result);
+                                $('#errorAlert').removeClass('hidden');                                
                             }
                             else { $('#successAlert').removeClass('hidden'); }
 
@@ -205,17 +205,13 @@
                             $('#numberDiscsInput').val('1');
                             $('#miscInput').val('');
 
-                            $('#artistInput').focus();
-                            $('#saveButton').prop('disabled', false);                            
+                            $('#artistInput').focus();                            
                         },
                         function (error)
                         {
                             // CDServiceAJAX error callback
-                            $('#errorAlert').removeClass('hidden');
-                            $('#errorMessage').val(error);
-
-                            $('#saveButton').prop('disabled', false);
-                            isSaving = false;
+                            $('#errorMessage').text(error);
+                            $('#errorAlert').removeClass('hidden');                            
                         });
                     },
                     function ()
@@ -228,12 +224,13 @@
                 else
                 {
                     // Validation failed
-                    $('#errorMessage').text("Error: " + validationErrors);
+                    $('#errorMessage').text(validationErrors);
                     $('#errorAlert').removeClass('hidden');
                 }
 
-                // Reset isSaving flag
+                // Reset isSaving flag & button
                 isSaving = false;
+                $('#saveButton').prop('disabled', false);
                 
             } // end SaveCD
         }); // end document.ready function
