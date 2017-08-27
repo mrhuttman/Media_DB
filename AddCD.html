@@ -45,6 +45,10 @@
                 <input type="text" class="form-control" id="titleInput" placeholder="Title" />
             </div>
             <div class="form-group">
+                <label for="binderInput">Binder #</label>
+                <input type="number" class="form-control" id="binderInput" />
+            </div>
+            <div class="form-group">
                 <label for="imageSmInput">Image URL(s)</label>
                 <input type="text" class="form-control" id="imageSmInput" placeholder="Small" />
             </div>
@@ -62,11 +66,7 @@
                     <input type="checkbox" id="isSingleInput" />
                     Single?
                 </label>
-            </div>
-            <div class="form-group">
-                <label for="binderInput">Binder #</label>
-                <input type="number" class="form-control" id="binderInput" />
-            </div>
+            </div>            
             <div class="form-group">
                 <label for="numberDiscsInput"># of Discs</label>
                 <input type="number" class="form-control" id="numberDiscsInput" />
@@ -86,28 +86,74 @@
     <script src="Scripts/bootstrap.min.js"></script>
 
     <script>
-        $(document).ready(function () {
+        // Flag used to prevent duplicate saves
+        var isSaving = false;
+
+        $(document).ready(function ()
+        {
             // Load site navigation bar
             $('#siteNav').load('TopMenu.html');
 
             // Set default values
             $('#numberDiscsInput').val('1');
 
+            // Set cursor at first field
+            $('#artistInput').focus();
+
             // Save CD on saveButton click or when Enter is pressed
             $('#saveButton').click(function (e)
             {
                 //http://stackoverflow.com/questions/18637181/jquery-click-method-reloads-the-page
                 e.preventDefault();
-                SaveCD();               
+                if (false == isSaving)
+                {
+                    isSaving = true;
+                    SaveCD();
+                }
             });
 
             document.onkeydown = function (e)
-            {              
-                if (13 == e.keyCode) { SaveCD(); }
+            {
+                // 13 = Enter
+                if (13 == e.keyCode && false == isSaving)
+                {
+                    isSaving = true;
+                    $('#saveButton').prop('disabled', true);
+                    SaveCD();
+                }
             };
+
+            function CheckIfCDExists(newCD, successCallback, errorCallback)
+            {
+                var CDExists = false;
+                var input = new Empty_SearchCDs_Advanced_Input();
+                input.Page = 1;
+                input.SearchCD = newCD;                                                
+                input.Filter_isMixed = false;                
+                input.Filter_isSingle = false;
+                
+                CDServiceAJAX('POST', 'SearchCDs_Advanced', JSON.stringify(input),
+                    function (result)
+                    {
+                        // If we have any rows, then a duplicate exists
+                        // Run callback only if no duplicates
+                        if (0 < result.NumRows) { CDExists = true; }
+                        if (false == CDExists) { successCallback && successCallback(); }
+                        else { errorCallback && errorCallback(); }
+                    },
+                    function (error)
+                    {
+                        console.log("Error in CheckIfCDExists: " + error);
+                        $('#errorMessage').text(error);
+                        $('#errorAlert').removeClass('hidden');
+                    });
+            }
 
             function SaveCD()
             {
+                // Disable the save button to prevent duplicate additions
+                $('#saveButton').prop('disabled', true);                
+
                 // If alerts were showing, hide them
                 if (false == $('#successAlert').hasClass('hidden')) { $('#successAlert').addClass('hidden'); }
                 if (false == $('#errorAlert').hasClass('hidden')) { $('#errorAlert').addClass('hidden'); }
@@ -120,49 +166,77 @@
                 newCD.imageUrl_lg = $('#imageLgInput').val();
                 newCD.isMixed = $('#isMixedInput').is(':checked') ? true : false;
                 newCD.isSingle = $('#isSingleInput').is(':checked') ? true : false;
-                newCD.binder = parseInt($('#binderInput').val());
+                newCD.binder = !isNaN(parseInt($('#binderInput').val())) ? parseInt($('#binderInput').val()) : 0;
                 newCD.numDiscs = parseInt($('#numberDiscsInput').val());
                 newCD.misc = $('#miscInput').val();
-                // TODO: Add validation for Artist & Title fields
 
-                CDServiceAJAX('POST', 'AddCD', JSON.stringify(newCD),
-                function (result)
+                // Validate required fields
+                var isValidCD = true;
+                var validationErrors = "";
+                if (0 == newCD.Artist.length) { isValidCD = false; validationErrors += "Artist is required."; }
+                if (0 == newCD.Title.length) { isValidCD = false; validationErrors += "Title is required."; }
+                if (0 >= newCD.binder) { isValidCD = false; validationErrors += "Binder must be greater than 0."; }
+
+                if (isValidCD)
                 {
-                    console.log("AddCD result: " + result);
+                    CheckIfCDExists(newCD,
+                    function ()
+                    {
+                        // CheckIfCDExists Success Callback
+                        CDServiceAJAX('POST', 'AddCD', JSON.stringify(newCD),
+                        function (result)
+                        {
+                            // CDServiceAJAX success callback
+                            if (-1 !== result.indexOf("ERROR"))
+                            {
+                                $('#errorAlert').removeClass('hidden');
+                                $('#errorMessage').val(result);
+                            }
+                            else { $('#successAlert').removeClass('hidden'); }
 
-                    if ("AddCD: Save was not successful." == result) {
-                        // Show error alert if error message comes back from service
+                            // Reset form 
+                            $('#artistInput').val('');
+                            $('#titleInput').val('');
+                            $('#imageSmInput').val('');
+                            $('#imageLgInput').val('');
+                            $('#isMixedInput').removeClass('checked').prop('checked', false);
+                            $('#isSingleInput').removeClass('checked').prop('checked', false);
+                            $('#binderInput').val('');
+                            $('#numberDiscsInput').val('1');
+                            $('#miscInput').val('');
+
+                            $('#artistInput').focus();
+                            $('#saveButton').prop('disabled', false);                            
+                        },
+                        function (error)
+                        {
+                            // CDServiceAJAX error callback
+                            $('#errorAlert').removeClass('hidden');
+                            $('#errorMessage').val(error);
+
+                            $('#saveButton').prop('disabled', false);
+                            isSaving = false;
+                        });
+                    },
+                    function ()
+                    {
+                        // CheckIfCDExists Error Callback                        
+                        $('#errorMessage').text("Duplicate CD found. CD was not saved.");
                         $('#errorAlert').removeClass('hidden');
-                        $('#errorMessage').val(result);
-                    }
-                    else {
-                        $('#successAlert').removeClass('hidden');
-                    }
-
-                    // Reset form fields
-                    $('#artistInput').val('');
-                    $('#titleInput').val('');
-                    $('#imageSmInput').val('');
-                    $('#imageLgInput').val('');
-                    $('#isMixedInput').removeClass('checked').prop('checked', false);
-                    $('#isSingleInput').removeClass('checked').prop('checked', false);
-                    $('#binderInput').val('');
-                    $('#numberDiscsInput').val('1');
-                    $('#miscInput').val('');
-
-                    $('#artistInput').focus();
-                },
-                function (error)
+                    });
+                } // end if (isValidCD)
+                else
                 {
-                    console.log("AddCD failed!");
-                    console.log(error);
-
-                    // Show error alert
+                    // Validation failed
+                    $('#errorMessage').text("Error: " + validationErrors);
                     $('#errorAlert').removeClass('hidden');
-                    $('#errorMessage').val(error);
-                });
-            }
-        });
+                }
+
+                // Reset isSaving flag
+                isSaving = false;
+                
+            } // end SaveCD
+        }); // end document.ready function
     </script>
 
 </body>

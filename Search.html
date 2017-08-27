@@ -154,7 +154,7 @@
         function BuildBinderSelect(callback)
         {
             CDServiceAJAX('POST', 'GetBindersCount', null, function (result)
-            {
+            {                
                 for (i = 1; i <= result; i++)
                 {
                     // Add options to binderSelect
@@ -181,6 +181,7 @@
             media += editLink;
             media += "<img class='media-object cd-cover-sm' src='/Images/Covers/" + imageUrl_sm + "' onerror='imageError(this);'>";
             media += "</a></div>";
+
             // Right text & link
             media += "<div class='media-body'>";
             media += "<h4 class='media-heading'>";

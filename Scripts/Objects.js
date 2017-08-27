@@ -13,21 +13,22 @@
     this.misc = misc;
 }
 
-function Empty_Music_CD() {
-    return new Music_CD(0, "", "", "", "", false, false, 0, 0, "");
-}
+function Empty_Music_CD() { return new Music_CD(0, "", "", "", "", false, false, 0, 0, ""); }
 
-function SearchCDs_Binder_Input(binderNo, page) {
+function SearchCDs_Binder_Input(binderNo, page)
+{
     this.BinderNo = binderNo;
     this.Page = page;
 }
 
-function SearchCDs_Artist_Input(artist, page) {
+function SearchCDs_Artist_Input(artist, page)
+{
     this.Artist = artist;
     this.Page = page;
 }
 
-function SearchCDs_Title_Input(title, page) {
+function SearchCDs_Title_Input(title, page)
+{
     this.Title = title;
     this.Page = page;
 }
@@ -40,6 +41,4 @@ function SearchCDs_Advanced_Input(page, filter_isMixed, filter_isSingle, searchC
     this.SearchCD = searchCD;
 }
 
-function Empty_SearchCDs_Advanced_Input() {
-    return new SearchCDs_Advanced_Input(-1, false, false, new Empty_Music_CD());
-}
+function Empty_SearchCDs_Advanced_Input() { return new SearchCDs_Advanced_Input(-1, false, false, new Empty_Music_CD()); }

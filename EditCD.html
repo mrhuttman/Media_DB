@@ -148,10 +148,9 @@
             updatedCD.misc = $('#miscInput').val();            
 
             CDServiceAJAX('POST', 'UpdateCD', JSON.stringify(updatedCD),
-                function (result) {                    
-                    $('#successAlert').removeClass('hidden');
-                },
-                function (error) {
+                function (result) { $('#successAlert').removeClass('hidden'); },
+                function (error)
+                {
                     console.log("UpdateCD failed!");
                     console.log(error);
 
@@ -185,10 +184,6 @@
                     $('#errorAlert').removeClass('hidden');
                     $('#errorMessage').val(error);
                 });
-            }
-            else
-            {
-                // Do nothing
             }
         });
     });
