@@ -155,7 +155,7 @@
         {
             CDServiceAJAX('POST', 'GetBindersCount', null, function (result)
             {                
-                for (i = 1; i <= result; i++)
+                for (i = 1; i < result; i++)
                 {
                     // Add options to binderSelect
                     $('#binderSelect').append("<option value='" + i + "'>" + i + "</option>");
