@@ -1,5 +1,5 @@
 ﻿function Music_CD(itemNo, artist, title, imageUrl_sm, imageUrl_lg,
-    isMixed, isSingle, binder, numDiscs, misc)
+    isMixed, isSingle, binder, numDiscs, misc, genre)
 {
     this.itemNo_pk = itemNo;    // Note: These fields must exactly match (case-sensitive) the schema of the WCF objects
     this.Artist = artist;
@@ -11,9 +11,10 @@
     this.binder = binder;
     this.numDiscs = numDiscs;
     this.misc = misc;
+    this.Genre = genre;
 }
 
-function Empty_Music_CD() { return new Music_CD(0, "", "", "", "", false, false, 0, 0, ""); }
+function Empty_Music_CD() { return new Music_CD(0, "", "", "", "", false, false, 0, 0, "", ""); }
 
 function SearchCDs_Binder_Input(binderNo, page)
 {
@@ -30,6 +31,11 @@ function SearchCDs_Artist_Input(artist, page)
 function SearchCDs_Title_Input(title, page)
 {
     this.Title = title;
+    this.Page = page;
+}
+
+function SearchCDs_Genre_Input(genre, page) {
+    this.Genre = genre;
     this.Page = page;
 }
 

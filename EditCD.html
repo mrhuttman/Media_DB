@@ -33,18 +33,17 @@
                 <label>ID: <span id="cdIDSpan"></span></label>
             </div>
             <div class="form-group">
+                <label for="binderInput">Binder #</label>
+                <input type="number" class="form-control" id="binderInput" />
+            </div>
+            <div class="form-group">
                 <label for="artistInput">Artist</label>
                 <input type="text" class="form-control" id="artistInput" placeholder="Artist" />
             </div>
             <div class="form-group">
                 <label for="titleInput">Title</label>
                 <input type="text" class="form-control" id="titleInput" placeholder="Title" />
-            </div>
-            <div class="form-group">
-                <label for="imageSmInput">Image URL(s)</label>
-                <input type="text" class="form-control" id="imageSmInput" placeholder="Small" />
-                <input type="text" class="form-control" id="imageLgInput" placeholder="Large" />
-            </div>
+            </div>            
             <div class="checkbox">
                 <label>
                     <input type="checkbox" id="isMixedInput" />
@@ -58,16 +57,23 @@
                 </label>
             </div>
             <div class="form-group">
-                <label for="binderInput">Binder #</label>
-                <input type="number" class="form-control" id="binderInput" />
-            </div>
-            <div class="form-group">
                 <label for="numberDiscsInput"># of Discs</label>
                 <input type="number" class="form-control" id="numberDiscsInput" />
             </div>
             <div class="form-group">
+                <label for="genreInput">Genre</label>
+                <input type="text" class="form-control" id="genreInput" placeholder="Genre" />
+            </div>                        
+            <div class="form-group">
                 <label for="miscInput">Misc</label>
                 <input type="text" class="form-control" id="miscInput" placeholder="Misc." />
+            </div>
+            <div class="form-group">
+                <label for="imageSmInput">Image URL(s)</label>
+                <input type="text" class="form-control" id="imageSmInput" placeholder="Small" />                
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="imageLgInput" placeholder="Large" />
             </div>
             <button ID="saveButton" type="button" class="btn btn-primary btn-lg btn-block"><span class="glyphicon glyphicon-floppy-disk"></span> Save Changes</button>
             <button ID="deleteButton" type="button" class="btn btn-danger btn-lg btn-block"><span class="glyphicon glyphicon-remove"></span> Delete</button>
@@ -83,7 +89,11 @@
 <script src="Scripts/bootstrap.min.js"></script>
 
 <script>
-    $(document).ready(function () {
+    // Flag used to prevent duplicate saves
+    var isSaving = false;
+
+    $(document).ready(function ()
+    {
         // Load site navigation bar
         $('#siteNav').load('TopMenu.html');
 
@@ -115,6 +125,7 @@
                     $('#binderInput').val(result.binder);
                     $('#numberDiscsInput').val(result.numDiscs);
                     $('#miscInput').val(result.misc);
+                    $('#genreInput').val(result.Genre);
                     $('#cdIDSpan').text(result.itemNo_pk);                    
                 }, 
                 function (error) {
@@ -126,8 +137,10 @@
                 });
         }
 
-        $('#saveButton').click(function (e) {
-            e.preventDefault();
+        function SaveCD()
+        {
+            // Disable the save button to prevent duplicate additions
+            $('#saveButton').prop('disabled', true);
 
             // If alerts were showing, hide them
             if (false == $('#successAlert').hasClass('hidden')) { $('#successAlert').addClass('hidden'); }
@@ -145,12 +158,12 @@
             updatedCD.isSingle = $('#isSingleInput').is(':checked') ? true : false;
             updatedCD.binder = $('#binderInput').val();
             updatedCD.numDiscs = $('#numberDiscsInput').val();
-            updatedCD.misc = $('#miscInput').val();            
+            updatedCD.misc = $('#miscInput').val();
+            updatedCD.Genre = $('#genreInput').val();
 
             CDServiceAJAX('POST', 'UpdateCD', JSON.stringify(updatedCD),
                 function (result) { $('#successAlert').removeClass('hidden'); },
-                function (error)
-                {
+                function (error) {
                     console.log("UpdateCD failed!");
                     console.log(error);
 
@@ -158,6 +171,21 @@
                     $('#errorAlert').removeClass('hidden');
                     $('#errorMessage').val(error);
                 });
+
+            // Reset isSaving flag & button after 1 second (to prevent duplicate Enter presses)
+            setTimeout(function () {
+                isSaving = false;
+                $('#saveButton').prop('disabled', false);
+            }, 1000);
+        }
+
+        $('#saveButton').click(function (e) {
+            e.preventDefault();
+            if (false == isSaving)
+            {
+                isSaving = true;
+                SaveCD();
+            }                        
         });
 
         $('#deleteButton').click(function (e) {
@@ -186,5 +214,14 @@
                 });
             }
         });
+
+        document.onkeyup = function (e) {
+            // 13 = Enter
+            if (13 == e.keyCode && false == isSaving) {
+                isSaving = true;
+                $('#saveButton').prop('disabled', true);
+                SaveCD();
+            }
+        };
     });
 </script>

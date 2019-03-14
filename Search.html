@@ -70,9 +70,13 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label for="genreInput">Genre</label>
+                                <input type="text" class="form-control" id="genreInput" placeholder="Genre" />
+                            </div>
+                            <div class="form-group">
                                 <label for="numberDiscsInput"># of Discs</label>
                                 <input type="number" class="form-control" id="numberDiscsInput" />
-                            </div>
+                            </div>                            
                             <div class="form-group">
                                 <label for="miscInput">Misc</label>
                                 <input type="text" class="form-control" id="miscInput" placeholder="Misc." />
@@ -148,22 +152,19 @@
     <script src="Scripts/bootstrap.min.js"></script>
 
     <script>
-
+        // # of results to return per page
         pageSize = 20;
 
-        function BuildBinderSelect(callback)
-        {
-            CDServiceAJAX('POST', 'GetBindersCount', null, function (result)
-            {                
-                for (i = 1; i < result; i++)
-                {
+        function BuildBinderSelect(callback) {
+            CDServiceAJAX('POST', 'GetBindersDistinct', null, function (result) {
+                for (i = 0; i < result.NumRows; i++) {
                     // Add options to binderSelect
-                    $('#binderSelect').append("<option value='" + i + "'>" + i + "</option>");
+                    $('#binderSelect').append("<option value='" + result.CDs[i].binder + "'>"
+                        + result.CDs[i].binder + "</option>");
                 }
                 callback && callback();
             },
-            function (error)
-            {
+            function (error) {
                 console.log("Error in BuildBinderSelect: " + error);
                 $('#errorMessage').text(error);
                 $('#errorAlert').removeClass('hidden');
@@ -240,6 +241,7 @@
             input.Page = 1;
             input.SearchCD.Artist = $('#artistInput').val();
             input.SearchCD.binder = "Any" == $('#binderSelect option:selected').text() ? -1 : $('#binderSelect option:selected').text();
+            input.SearchCD.Genre = $('#genreInput').val();
 
             // Filter_isMixed is used to determine whether to filter by the isMixed field
             input.Filter_isMixed = "Any" == $('#mixedSelect option:selected').text() ? false : true;
@@ -269,6 +271,7 @@
             input.Filter_isSingle = null === getURLParameter('isSingle') ? false : true;
             input.SearchCD.numDiscs = getURLParameter('numDiscs');
             input.SearchCD.misc = getURLParameter('misc');
+            input.SearchCD.Genre = getURLParameter('genre');
             return input;
         }
 
@@ -278,6 +281,7 @@
             if (null !== searchInput.SearchCD.Artist && 0 < searchInput.SearchCD.Artist.length) { searchURL += "&artist=" + searchInput.SearchCD.Artist; }
             if (null !== searchInput.SearchCD.Title && 0 < searchInput.SearchCD.Title.length) { searchURL += "&title=" + searchInput.SearchCD.Title; }
             if (null !== searchInput.SearchCD.binder && -1 != searchInput.SearchCD.binder) { searchURL += "&binder=" + searchInput.SearchCD.binder; }
+            if (null !== searchInput.SearchCD.Genre && 0 < searchInput.SearchCD.Genre.length) { searchURL += "&genre=" + searchInput.SearchCD.Genre; }
             if (true == searchInput.Filter_isMixed) { searchURL += "&isMixed=" + searchInput.SearchCD.isMixed; }
             if (true == searchInput.Filter_isSingle) { searchURL += "&isSingle=" + searchInput.SearchCD.isSingle; }
             if (null !== searchInput.SearchCD.numDiscs && 0 < searchInput.SearchCD.numDiscs) { searchURL += "&numDiscs=" + searchInput.SearchCD.numDiscs; }
@@ -310,9 +314,7 @@
                             );
                     }
 
-                    // Note: pageSize is currently 20, same as defined in WCF service
-                    // TODO: Add page size select, add page size var to service
-
+                    // Note: pageSize is currently 20, same as defined in WCF service                    
                     // Set page select controls & heading with current page # & total num pages
                     BuildPageSelectElements(result.TotalNumRows, pageSize, searchInput.Page);
 
@@ -349,6 +351,7 @@
             else { $("#singleSelect option[value='Any']").prop('selected', true); }
             if (null !== input.SearchCD.numDiscs) { $('#numberDiscsInput').val(input.SearchCD.numDiscs); }
             if (null !== input.SearchCD.misc) { $('#miscInput').val(input.SearchCD.misc); }
+            if (null !== input.SearchCD.Genre) { $('#genreInput').val(input.SearchCD.Genre); }
             callback && callback(input);
         }
 
